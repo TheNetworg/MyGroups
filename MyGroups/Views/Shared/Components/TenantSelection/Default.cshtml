@@ -8,7 +8,7 @@
 
     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@currentTenant.DisplayName <span class="caret"></span></a>
     <ul class="dropdown-menu">
-        @foreach (var tenant in Model.Tenants)
+        @foreach (var tenant in Model.Tenants.OrderBy(x => x.DisplayName).ToList())
         {
             <li class="@(tenant.Id == currentTenantId ? "active" : "")">
                 <a asp-area="" asp-controller="Home" asp-action="TenantSelect" asp-route-id="@tenant.Id" asp-route-redirectUrl="@(Context.Request.Path + Context.Request.QueryString)">
