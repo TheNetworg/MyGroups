@@ -16,6 +16,10 @@
   <ItemGroup>
     <Compile Remove="Helpers\AuthPropertiesTokenCache.cs" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Views\Home\GraphGroups.cshtml" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AsyncEnumerator" Version="2.1.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.1.1" />
