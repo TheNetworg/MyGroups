@@ -1,0 +1,19 @@
+﻿@using System.Security.Principal
+@using WebApplication1.ViewComponents
+
+@if (User.Identity.IsAuthenticated)
+{
+    <ul class="nav navbar-nav navbar-right">
+        <li class="navbar-text">@User.Identity.Name</li>
+        <li class="dropdown">
+            @await Component.InvokeAsync(nameof(TenantSelection))
+        </li>
+        <li><a asp-area="" asp-controller="Account" asp-action="SignOut">Sign Out</a></li>
+    </ul>
+}
+else
+{
+    <ul class="nav navbar-nav navbar-right">
+        <li><a asp-area="" asp-controller="Account" asp-action="Signin">Sign in</a></li>
+    </ul>
+}

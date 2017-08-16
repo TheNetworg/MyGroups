@@ -1,0 +1,13 @@
+﻿@using WebApplication1.Models
+@model IList<GroupDTO>
+@{
+    var tenant = (TenantsListTenant)ViewData["tenant"];
+    ViewData["Title"] = $"{tenant.DisplayName} | MyGroups";
+}
+<h2>Member Groups</h2>
+<ul>
+    @foreach (var group in Model)
+    {
+        <li>@group.Name | <a href="@group.SharePointUrl">SharePoint</a></li>
+    }
+</ul>
