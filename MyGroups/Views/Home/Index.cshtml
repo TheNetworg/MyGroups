@@ -8,6 +8,43 @@
 <ul>
     @foreach (var group in Model)
     {
-        <li>@group.Name | <a href="@group.SharePointUrl">SharePoint</a></li>
+        <li>
+            @group.Name | 
+            <a target="_blank" href="@group.SharePointUrl">SharePoint</a> 
+            @if (group.Notebooks.Count > 0)
+            {
+                <span> | </span>
+                <div class="btn-group">
+                    <a target="_blank" href="@group.Notebooks.First().Url" class="btn btn-default">OneNote</a>
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="caret"></span>
+                        <span class="sr-only">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        @foreach (var notebook in group.Notebooks)
+                        {
+                            <li><a href="@notebook.Url">@notebook.Name</a></li>
+                        }
+                    </ul>
+                </div>
+            }
+            @if (group.Plans.Count > 0)
+            {
+                <span> | </span>
+                <div class="btn-group">
+                    <a target="_blank" href="@group.Plans.First().Url" class="btn btn-default">Planner</a>
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="caret"></span>
+                        <span class="sr-only">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        @foreach (var plan in group.Plans)
+                        {
+                            <li><a href="@plan.Url">@plan.Name</a></li>
+                        }
+                    </ul>
+                </div>
+            }
+        </li>
     }
 </ul>
