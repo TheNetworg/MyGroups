@@ -37,15 +37,17 @@ namespace MyGroups.Controllers
 
             var currentGroups = (await graphClient.Me.MemberOf.Request().GetAsync()).CurrentPage.OfType<Group>().Where(x => x.GroupTypes.Contains("Unified"));
 
-            var results = new ConcurrentBag<(Group group, Site site, IOnenoteNotebooksCollectionPage notebooks, IPlannerGroupPlansCollectionPage plans)>();
+            var results = new ConcurrentBag<(Group group, Site site, IOnenoteNotebooksCollectionPage notebooks, IPlannerGroupPlansCollectionPage plans, Drive drive)>();
 
             await currentGroups.ParallelForEachAsync(
                 async currentGroup =>
                 {
-                    var site = await graphClient.Groups[currentGroup.Id].Sites["root"].Request().GetAsync();
-                    var onenote = await graphClient.Groups[currentGroup.Id].Onenote.Notebooks.Request().GetAsync();
-                    var planner = await graphClient.Groups[currentGroup.Id].Planner.Plans.Request().GetAsync();
-                    results.Add((currentGroup, site, onenote, planner));
+                    var siteTask = graphClient.Groups[currentGroup.Id].Sites["root"].Request().GetAsync();
+                    var driveTask = graphClient.Groups[currentGroup.Id].Drive.Request().GetAsync();
+                    var onenoteTask = graphClient.Groups[currentGroup.Id].Onenote.Notebooks.Request().GetAsync();
+                    var plannerTask = graphClient.Groups[currentGroup.Id].Planner.Plans.Request().GetAsync();
+                    Task.WaitAll(siteTask, driveTask, onenoteTask, plannerTask);
+                    results.Add((currentGroup, siteTask.Result, onenoteTask.Result, plannerTask.Result, driveTask.Result));
                 }, 10);
 
             foreach(var result in results)
@@ -53,6 +55,7 @@ namespace MyGroups.Controllers
                 GroupDTO group = new GroupDTO();
                 group.Name = result.group.DisplayName;
                 group.SharePointUrl = result.site.WebUrl;
+                group.DriveUrl = result.drive.WebUrl;
                 foreach(var nb in result.notebooks)
                 {
                     group.Notebooks.Add(new OneNoteDTO
