@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Authentication;
 using Microsoft.AspNetCore.Http.Features.Authentication;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Graph;
 using MyGroups.Helpers;
 using MyGroups.Models;
@@ -21,6 +22,7 @@ namespace MyGroups.Controllers
     {
         private AzureServiceManagement _asm;
         private MicrosoftGraph _graph;
+        private IMemoryCache _memoryCache;
         public HomeController(AzureServiceManagement asm, MicrosoftGraph graph)
         {
             _asm = asm;
@@ -46,7 +48,7 @@ namespace MyGroups.Controllers
                     var driveTask = graphClient.Groups[currentGroup.Id].Drive.Request().GetAsync();
                     var onenoteTask = graphClient.Groups[currentGroup.Id].Onenote.Notebooks.Request().GetAsync();
                     var plannerTask = graphClient.Groups[currentGroup.Id].Planner.Plans.Request().GetAsync();
-                    Task.WaitAll(siteTask, driveTask, onenoteTask, plannerTask);
+                    await Task.WhenAll(siteTask, driveTask, onenoteTask, plannerTask);
                     results.Add((currentGroup, siteTask.Result, onenoteTask.Result, plannerTask.Result, driveTask.Result));
                 }, 10);
 
