@@ -23,10 +23,11 @@ namespace MyGroups.Controllers
         private AzureServiceManagement _asm;
         private MicrosoftGraph _graph;
         private IMemoryCache _memoryCache;
-        public HomeController(AzureServiceManagement asm, MicrosoftGraph graph)
+        public HomeController(AzureServiceManagement asm, MicrosoftGraph graph, IMemoryCache memoryCache)
         {
             _asm = asm;
             _graph = graph;
+            _memoryCache = memoryCache;
         }
         public async Task<IActionResult> Index()
         {
@@ -44,12 +45,18 @@ namespace MyGroups.Controllers
             await currentGroups.ParallelForEachAsync(
                 async currentGroup =>
                 {
-                    var siteTask = graphClient.Groups[currentGroup.Id].Sites["root"].Request().GetAsync();
-                    var driveTask = graphClient.Groups[currentGroup.Id].Drive.Request().GetAsync();
-                    var onenoteTask = graphClient.Groups[currentGroup.Id].Onenote.Notebooks.Request().GetAsync();
-                    var plannerTask = graphClient.Groups[currentGroup.Id].Planner.Plans.Request().GetAsync();
-                    await Task.WhenAll(siteTask, driveTask, onenoteTask, plannerTask);
-                    results.Add((currentGroup, siteTask.Result, onenoteTask.Result, plannerTask.Result, driveTask.Result));
+                    (Group group, Site site, IOnenoteNotebooksCollectionPage notebooks, IPlannerGroupPlansCollectionPage plans, Drive drive) result;
+                    if (!_memoryCache.TryGetValue(currentGroup.Id, out result))
+                    {
+                        var siteTask = graphClient.Groups[currentGroup.Id].Sites["root"].Request().GetAsync();
+                        var driveTask = graphClient.Groups[currentGroup.Id].Drive.Request().GetAsync();
+                        var onenoteTask = graphClient.Groups[currentGroup.Id].Onenote.Notebooks.Request().GetAsync();
+                        var plannerTask = graphClient.Groups[currentGroup.Id].Planner.Plans.Request().GetAsync();
+                        await Task.WhenAll(siteTask, driveTask, onenoteTask, plannerTask);
+                        result = (currentGroup, siteTask.Result, onenoteTask.Result, plannerTask.Result, driveTask.Result);
+                        _memoryCache.Set(currentGroup.Id, result, TimeSpan.FromHours(24));
+                    }
+                    results.Add(result);
                 }, 10);
 
             foreach(var result in results)
