@@ -16,7 +16,7 @@ namespace MyGroups.ViewComponents
         }
         public async Task<IViewComponentResult> InvokeAsync()
         {
-            var tenants = await _asm.GetTenantsListCachedAsync();
+            var tenants = await _asm.GetTenantsListFromManagementCachedAsync();
             return View(tenants);
         }
     }

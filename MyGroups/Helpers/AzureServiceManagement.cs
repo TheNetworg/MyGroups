@@ -40,6 +40,16 @@ namespace MyGroups.Helpers
             }
             return tenants;
         }
+        public async Task<TenantsList> GetTenantsListFromManagementCachedAsync()
+        {
+            TenantsList tenants;
+            if (!_memoryCache.TryGetValue($"{_userObjectId}-tenants", out tenants))
+            {
+                tenants = await GetTenantsListFromManagementAsync();
+                _memoryCache.Set($"{_userObjectId}-tenants", tenants, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(15)));
+            }
+            return tenants;
+        }
         public async Task<TenantsList> GetTenantsListAsync()
         {
             var authResult = await _authContext.AcquireTokenSilentAsync("https://management.core.windows.net/", _clientCredential, new UserIdentifier(_userObjectId, UserIdentifierType.UniqueId));
@@ -58,6 +68,29 @@ namespace MyGroups.Helpers
                 {
                     TenantsList tenants = JsonConvert.DeserializeObject<TenantsList>(responseContent);
                     return tenants;
+                }
+            }
+        }
+        public async Task<TenantsList> GetTenantsListFromManagementAsync()
+        {
+            var authResult = await _authContext.AcquireTokenSilentAsync("https://management.core.windows.net/", _clientCredential, new UserIdentifier(_userObjectId, UserIdentifierType.UniqueId));
+
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult.AccessToken);
+
+                var response = httpClient.GetAsync("https://management.azure.com/tenants?api-version=2016-02-01").Result;
+                string responseContent = await response.Content.ReadAsStringAsync();
+                if (!response.IsSuccessStatusCode)
+                {
+                    return null;
+                }
+                else
+                {
+                    var tenantIds = JsonConvert.DeserializeObject<ManagementTenantList>(responseContent);
+                    List<TenantsListTenant> tenants = KnownTenants.Tenants.Where(x => tenantIds.Value.Where(y => x.Id == y.TenantId).FirstOrDefault() != null).ToList();
+
+                    return new TenantsList { Tenants = tenants };
                 }
             }
         }

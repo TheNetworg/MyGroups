@@ -31,7 +31,7 @@ namespace MyGroups.Controllers
         }
         public async Task<IActionResult> Index()
         {
-            var tenantList = await _asm.GetTenantsListCachedAsync();
+            var tenantList = await _asm.GetTenantsListFromManagementCachedAsync();
             var currentTenantId = HttpContext.User.FindFirst(AzureAdClaimTypes.TenantId)?.Value;
             var currentTenant = tenantList.Tenants.Where(x => x.Id == currentTenantId).First();
 
